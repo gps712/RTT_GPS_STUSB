@@ -141,6 +141,9 @@ unsigned int CRC16_ModBusEx(unsigned char *ptr, unsigned int len,unsigned int cr
  return(crc);
 }
 
+
+
+
 /*********************************************************************************
 *函数名称:void updata_flash_read_para(STYLE_UPDATA_STATE *para)
 *功能描述:读取升级参数
