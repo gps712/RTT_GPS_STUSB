@@ -391,7 +391,7 @@ void updata_commit_ack_err(u16 fram_num)
 	data_to_buf(pbuf, fram_num, 2);
 	data_to_buf(pbuf+2, 0x8108, 2);
 	pbuf[4] = 1;
-	jt808_tx_ack(0x0108,pbuf,2);
+	jt808_tx_ack(0x0001,pbuf,2);
 
 }
 /*********************************************************************************
@@ -413,7 +413,7 @@ void updata_commit_ack_ok(u16 fram_num)
 	data_to_buf(pbuf, fram_num, 2);
 	data_to_buf(pbuf+2, 0x8108, 2);
 	pbuf[4] = 0;
-	jt808_tx_ack(0x0108,pbuf,2);
+	jt808_tx_ack(0x0001,pbuf,2);
 }
 
 /*********************************************************************************
@@ -549,10 +549,9 @@ u8 updata_ack(STYLE_UPDATA_STATE *para,u8 check)
 
 
 /*********************************************************************************
-*函数名称:rt_err_t updata_jt808_0x8108(uint16_t fram_num,uint8_t *pmsg,u16 msg_len)
+*函数名称:rt_err_t updata_jt808_0x8108(uint8_t *pmsg,u16 msg_len)
 *功能描述:平台下发拍照命令处理函数
-*输	入:	fram_num:应答流水号
-		pmsg	:808消息体数据
+*输	入:	pmsg	:808消息体数据
 		msg_len	:808消息体长度
 *输	出:	none
 *返 回 值:rt_err_t

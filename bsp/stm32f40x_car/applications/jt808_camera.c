@@ -552,10 +552,9 @@ void Cam_jt808_0x8801_cam_end( struct _Style_Cam_Requset_Para *para )
 
 
 /*********************************************************************************
-*函数名称:rt_err_t Cam_jt808_0x8801(uint16_t fram_num,uint8_t *pmsg,u16 msg_len)
+*函数名称:rt_err_t Cam_jt808_0x8801(uint8_t linkno,uint8_t *pmsg)
 *功能描述:平台下发拍照命令处理函数
-*输	入:	fram_num:应答流水号
-		pmsg	:808消息体数据
+*输	入:	pmsg	:808消息体数据
 		msg_len	:808消息体长度
 *输	出:	none
 *返 回 值:rt_err_t
@@ -644,10 +643,9 @@ rt_err_t Cam_jt808_0x8801(uint8_t linkno,uint8_t *pmsg)
 }
 
 /*********************************************************************************
-*函数名称:rt_err_t Cam_jt808_0x8802(uint16_t fram_num,uint8_t *pmsg,u16 msg_len)
+*函数名称:rt_err_t Cam_jt808_0x8802(uint8_t linkno,uint8_t *pmsg)
 *功能描述:存储多媒体数据检索 
-*输	入:	fram_num:应答流水号
-		pmsg	:808消息体数据
+*输	入:	pmsg	:808消息体数据
 		msg_len	:808消息体长度
 *输	出:none
 *返 回 值:rt_err_t
