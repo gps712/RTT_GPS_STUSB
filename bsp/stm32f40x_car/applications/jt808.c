@@ -30,6 +30,7 @@
 #include "jt808_gps.h"
 #include "jt808_camera.h"
 #include "vdr.h"
+#include "jt808_area.h"
 
 #pragma diag_error 223
 
@@ -451,8 +452,10 @@ rt_err_t jt808_add_tx_data( uint8_t linkno,
 	/**/
 	
 	pnodedata = rt_malloc( sizeof( JT808_TX_NODEDATA )+sizeof(JT808_MSG_HEAD) + len + 4);
+	
 	if( pnodedata == RT_NULL )
-	{
+	{rt_free(pinfo);
+	pinfo=RT_NULL;
 		return -RT_ERROR;
 	}
 	memset(pnodedata,0,sizeof(JT808_TX_NODEDATA));		///绝对不能少，否则系统出错
@@ -1033,48 +1036,56 @@ static int handle_rx_0x8500( uint8_t linkno, uint8_t *pmsg )
 /**/
 static int handle_rx_0x8600( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8600(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8601( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8601(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8602( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8602(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8603( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8603(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8604( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8604(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8605( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8605(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8606( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8606(linkno,pmsg);
 	return 1;
 }
 
 /**/
 static int handle_rx_0x8607( uint8_t linkno, uint8_t *pmsg )
 {
+	area_jt808_0x8607(linkno,pmsg);
 	return 1;
 }
 
@@ -2087,6 +2098,8 @@ rt_err_t gprs_rx( uint8_t linkno, uint8_t * pinfo, uint16_t length )
 {
 	uint8_t * pmsg;
 	pmsg = rt_malloc( length + 3 );                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+
+
 
 
 

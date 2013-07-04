@@ -32,6 +32,8 @@
 #define SST25_READ		0x03
 
 
+struct rt_semaphore sem_dataflash;
+
 /***********************************************************
 * Function:
 * Description:
@@ -147,6 +149,10 @@ void sst25_init( void )
 	DF_CS_0;
 	spi_tx( DBSY );
 	DF_CS_1;
+
+	rt_sem_init(&sem_dataflash,"sem_df",0, RT_IPC_FLAG_FIFO );
+	rt_sem_release(&sem_dataflash);
+	
 }
 
 /***********************************************************
@@ -269,12 +275,13 @@ static void sst25_bytewrite( uint32_t addr, uint8_t data )
 
 /*
    不判断是否要删除，直接写
+   避免跨4k写
  */
 
 void sst25_write_through( uint32_t addr, uint8_t *p, uint16_t len )
 {
 	volatile uint8_t	st = 0;
-	uint32_t			i, wr_addr;
+	uint32_t			wr_addr;
 	uint8_t				*pdata	= p;
 	uint16_t			remain	= len;
 	wr_addr = addr;
@@ -286,11 +293,16 @@ void sst25_write_through( uint32_t addr, uint8_t *p, uint16_t len )
 		wr_addr++;
 	}
 #else
-/*AAI方式写*/
+/*AAI方式写,要判读地址的奇偶*/
 	if( len == 1 )
 	{
 		sst25_bytewrite( wr_addr, *pdata );
 		return;
+	}
+	if(wr_addr&0x01)	/*AAI需要从A0=0开始*/
+	{
+		sst25_bytewrite( wr_addr++, *pdata++ );
+		remain--;
 	}
 
 	DF_CS_0;
@@ -349,7 +361,7 @@ void sst25_write_back( uint32_t addr, uint8_t *p, uint16_t len )
 /*找到当前地址对应的4k=0x1000边界*/
 	wr_addr = addr & 0xFFFFF000;            /*对齐到4k边界*/
 
-	offset	= addr & 0xfff;                 /*4k内偏移*/
+	offset = addr & 0xfff;                  /*4k内偏移*/
 
 	while( remain )
 	{
@@ -419,23 +431,16 @@ int df_read( uint32_t addr, uint16_t size )
 	uint8_t c;
 	uint8_t *p		= RT_NULL;
 	uint8_t *pdata	= RT_NULL;
-	uint8_t buf[128];
-	uint8_t printbuf[70];
+	uint8_t printbuf[100];
 	int32_t len = size;
+	uint32_t pos=addr;
 
-	if( len < 128 )
+	p = rt_malloc( len );
+	if( p == RT_NULL )
 	{
-		pdata = buf;
-	}else
-	{
-		p = rt_malloc( len );
-		if( p == RT_NULL )
-		{
-			return 0;
-		}
-		pdata = p;
+		return 0;
 	}
-
+	pdata = p;
 	sst25_read( addr, pdata, len );
 
 	while( len > 0 )
@@ -459,79 +464,19 @@ int df_read( uint32_t addr, uint16_t size )
 			pdata++;
 		}
 		printbuf[69] = 0;
-		rt_kprintf( "%s\r\n", printbuf );
+		rt_kprintf( "%08x %s\r\n",pos,printbuf );
 		len -= count;
+		pos+=count;
 	}
 	if( p != RT_NULL )
 	{
 		rt_free( p );
+		p=RT_NULL;
 	}
 	return size;
 }
 
 FINSH_FUNCTION_EXPORT( df_read, read from serial flash );
-
-
-/***********************************************************
-* Function:
-* Description:
-* Input:
-* Input:
-* Output:
-* Return:
-* Others:
-***********************************************************/
-uint8_t df_test( void )
-{
-	uint32_t	i, j, count;
-
-	uint8_t		*p = RT_NULL;
-	uint8_t		*pdata;
-	uint8_t		buf[256];
-
-	p = rt_malloc( 4096 );
-	if( p == RT_NULL )
-	{
-		return 0;
-	}
-
-	rt_kprintf( "%d>%d\r\n", rt_tick_get( ), __LINE__ );
-/*整片搽除*/
-	for( i = 0; i < 10000; i += 4096 )
-	{
-		sst25_erase_4k( i );
-	}
-	rt_kprintf( "%d>%d\r\n", rt_tick_get( ), __LINE__ );
-/*直写*/
-	pdata = p;
-	for( i = 0; i < 100; i++ )
-	{
-		buf[i] = i;
-	}
-	for( i = 0; i < 10000; i += 100 )
-	{
-		sst25_write_through( i, buf, 100 );
-	}
-	rt_kprintf( "%d>%d\r\n", rt_tick_get( ), __LINE__ );
-/*判断*/
-	for( i = 0; i < 10000; i += 100 )
-	{
-		sst25_read( i, p, 100 );
-		for( j = 0; j < 100; j++ )
-		{
-			if( *( p + j ) != buf[j] )
-			{
-				rt_kprintf( "%d>err i=0x%08x j=%d\r\n", rt_tick_get( ), i, j );
-				break;
-			}
-		}
-	}
-
-	rt_kprintf( "%d>%d\r\n", rt_tick_get( ), __LINE__ );
-	rt_free( p );
-}
-
-FINSH_FUNCTION_EXPORT( df_test, test dataflash );
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

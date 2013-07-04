@@ -267,7 +267,6 @@ rt_err_t Cam_jt808_0x801(u32 mdeia_id ,u8 media_delete)
 	TypeDF_PackageHead TempPackageHead;
 	rt_err_t	rt_ret;
 	
-
 	///查找多媒体ID是否存在
 	TempAddress=Cam_Flash_FindPicID(mdeia_id,&TempPackageHead);
 	if(TempAddress==0xFFFFFFFF)

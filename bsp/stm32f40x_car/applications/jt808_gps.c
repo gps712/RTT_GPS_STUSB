@@ -27,6 +27,7 @@
 
 #include "vdr.h"
 #include "math.h"
+#include "jt808_area.h"
 
 #define BIT( n ) ( 1 << n )
 
@@ -807,6 +808,8 @@ uint8_t process_gga( uint8_t * pinfo )
 void gps_rx( uint8_t * pinfo, uint16_t length )
 
 {
+	u8 *pbuf;
+	u16 len;
 	char * psrc;
 	psrc				= pinfo;
 	*( psrc + length )	= 0;
@@ -827,6 +830,8 @@ void gps_rx( uint8_t * pinfo, uint16_t length )
 		if( process_rmc( psrc ) == 0 )  /*处理正确的RMC信息*/
 		{
 			process_gps( );             /*处理GPS信息*/
+			area_process();
+			area_get_alarm(pbuf,&len);
 		}
 	}
 
@@ -854,6 +859,7 @@ void gps_rx( uint8_t * pinfo, uint16_t length )
 void jt808_gps_init( void )
 {
 	auxio_init();
+	area_init();
 	rt_timer_init( &tmr_gps, "tmr_gps",         /* 定时器名字是 tmr_gps */
 	               cb_tmr_gps,                  /* 超时时回调的处理函数 */
 	               RT_NULL,                     /* 超时函数的入口参数 */
