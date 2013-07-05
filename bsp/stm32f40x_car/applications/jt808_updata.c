@@ -164,7 +164,7 @@ void updata_flash_read_para(STYLE_UPDATA_STATE *para)
 
 
 /*********************************************************************************
-*函数名称:u8 updata_flash_read_para(STYLE_UPDATA_STATE *para)
+*函数名称:u8 updata_flash_write_para(STYLE_UPDATA_STATE *para)
 *功能描述:写入升级参数
 *输	入:	para	:升级参数结构体
 *输	出:	none
@@ -200,7 +200,7 @@ u8 updata_flash_write_para(STYLE_UPDATA_STATE *para)
 
 
 /*********************************************************************************
-*函数名称:void updata_flash_read_para(STYLE_UPDATA_STATE *para)
+*函数名称:void updata_flash_write_recv_page(STYLE_UPDATA_STATE *para)
 *功能描述:写入升级参数，该方法并不擦除扇区，所以只能将flash中的每个字节的1改为0，并不能讲0改为1
 *输	入:	para	:升级参数结构体
 		page	:当前成功接收到得包序号
@@ -596,6 +596,8 @@ rt_err_t updata_jt808_0x8108(uint8_t linkno,uint8_t *pmsg)
  	}
 
  updata_commit_ack_ok(fram_num);			///通用应答
+ 
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  if( cur_package_num == 1)	///第一包
  	{
  	///第一包处理
@@ -727,10 +729,13 @@ rt_err_t updata_jt808_0x8108(uint8_t linkno,uint8_t *pmsg)
 		}
  	}
  UPDATA_OK:
+ 	rt_sem_release(&sem_dataflash);
  	return RT_EOK;
  UPDATA_ERR:
+ 	rt_sem_release(&sem_dataflash);
  	return RT_ERROR;
  UPDATA_SUCCESS:
+ 	rt_sem_release(&sem_dataflash);
 	rt_kprintf("\r\n 程序升级完成，10秒后复位设备。");
 	rt_thread_delay(RT_TICK_PER_SECOND * 10);
 	reset(1);

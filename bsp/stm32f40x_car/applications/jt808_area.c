@@ -289,7 +289,7 @@ u32 dis_Point2Point(s32 Lati_1,s32 Longi_1,s32 Lati_2,s32 Longi_2)
  tempd1 *= tempd1;
  
  temps32data = sqrt( tempd1 + tempd2);
- //rt_kprintf("dis = %d",temps32data);
+ rt_kprintf("dis = %d",temps32data);
  return (u32)temps32data ;
 }
 
@@ -640,7 +640,7 @@ u16 area_flash_get_line_data( u8 *pdatabuf, u16 maxlen, Type_LineInfo *AreaInfo)
 		Area_Para.line_info[i].line_data = RT_NULL;
 		}
 	}
- 
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  for(TempAddress=DF_LineAddress_Start;TempAddress<DF_LineAddress_End;)
  	{
  	sst25_read(TempAddress,(u8 *)&TempAreaHead,sizeof(TypeDF_AreaHead));
@@ -673,7 +673,8 @@ u16 area_flash_get_line_data( u8 *pdatabuf, u16 maxlen, Type_LineInfo *AreaInfo)
 	TempAddress+=DF_LINESaveSect;
  	}
  ret = 0;
- FUNC_RET:
+FUNC_RET:
+ rt_sem_release(&sem_dataflash);
  return ret;
 }
 
@@ -703,12 +704,13 @@ u16 area_flash_write_area( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
 
  if((pData->State==0)||(pData->State>AREA_Polygon))
  	{
- 	ret = 0; goto FUNC_RET;
+ 	return 0;
  	}
  if((pData->Len > maxlen - Area_Para.area_len)||( Area_Para.area_num >= AREANUM ))
  	{
- 	ret = 0; goto FUNC_RET;
+ 	return 0;
  	}
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  ///处理修改电子围栏区域命令
  for(TempAddress=DF_AreaAddress_Start;TempAddress<DF_AreaAddress_End;)
  	{
@@ -751,6 +753,7 @@ u16 area_flash_write_area( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
  
  ret = 1;
  FUNC_RET:
+ rt_sem_release(&sem_dataflash);
  return ret;
 }
 
@@ -780,13 +783,13 @@ u16 area_flash_write_line( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
 
  if((pData->State==0)||(pData->State != AREA_Line))
  	{
- 	ret = 0; goto FUNC_RET;
+ 	return 0;
  	}
  if( Area_Para.line_num >= LINENUM )
  	{
- 	ret = 0; goto FUNC_RET;
+ 	return 0;
  	}
-
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  TempAddress = DF_LineAddress_Start;
  for( i = 0; i < LINENUM; i++ )
  	{
@@ -804,6 +807,7 @@ u16 area_flash_write_line( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
  
  ret = 1;
  FUNC_RET:
+ rt_sem_release(&sem_dataflash);
  return ret;
 }
 
@@ -827,6 +831,7 @@ void area_flash_del_area( u32 del_id, ENUM_AREA	del_State)
  u32 TempAddress;
  TypeDF_AreaHead TempAreaHead;
  
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  for(TempAddress=DF_AreaAddress_Start;TempAddress<DF_AreaAddress_End;)
  	{
  	sst25_read(TempAddress,(u8 *)&TempAreaHead,sizeof(TypeDF_AreaHead));
@@ -845,6 +850,7 @@ void area_flash_del_area( u32 del_id, ENUM_AREA	del_State)
 		}
  	}
  area_flash_read_area(area_buffer,AREA_BUF_SIZE);
+ rt_sem_release(&sem_dataflash);
 }
 
 /*********************************************************************************
@@ -864,7 +870,7 @@ void area_flash_del_line( u32 del_id )
 {
  u32 TempAddress;
  TypeDF_AreaHead TempAreaHead;
- 
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  for(TempAddress=DF_LineAddress_Start;TempAddress<DF_LineAddress_End;)
  	{
  	sst25_read(TempAddress,(u8 *)&TempAreaHead,sizeof(TypeDF_AreaHead));
@@ -879,6 +885,7 @@ void area_flash_del_line( u32 del_id )
 	TempAddress+=DF_LINESaveSect;
  	}
  area_flash_read_line(line_buffer,LINE_BUF_SIZE);
+ rt_sem_release(&sem_dataflash);
 }
 
 
@@ -2178,9 +2185,10 @@ void area_init(void)
  
  //rt_kprintf("enmu len=%d,area_info len=%d \r\n",sizeof(ENUM_AREA),sizeof(area_info));
  memset((void *)&Area_Para,0,sizeof(Area_Para));
+ rt_sem_take( &sem_dataflash, RT_TICK_PER_SECOND * FLASH_SEM_DELAY );
  area_flash_read_area(area_buffer,AREA_BUF_SIZE);
  area_flash_read_line(line_buffer,LINE_BUF_SIZE);
- 
+ rt_sem_release(&sem_dataflash);
 }
 
 
@@ -2333,7 +2341,7 @@ u32 area_get_alarm(u8 *pdestbuf,u16* destbuflen)
 		goto FUNC_RET;
 		}
  	}
- return retdata; 
+ 
  FUNC_RET:
  	if(retdata==0)
  		{

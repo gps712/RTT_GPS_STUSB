@@ -4,6 +4,9 @@
 #define __SST25V_H
 #include <stm32f4xx.h>
 
+
+#define FLASH_SEM_DELAY			2
+
 extern struct rt_semaphore sem_dataflash;
 
 

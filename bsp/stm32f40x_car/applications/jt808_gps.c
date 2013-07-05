@@ -811,6 +811,7 @@ void gps_rx( uint8_t * pinfo, uint16_t length )
 	u8 *pbuf;
 	u16 len;
 	char * psrc;
+	u32 area_alarm;
 	psrc				= pinfo;
 	*( psrc + length )	= 0;
 	/*是否输出原始信息*/
@@ -831,7 +832,11 @@ void gps_rx( uint8_t * pinfo, uint16_t length )
 		{
 			process_gps( );             /*处理GPS信息*/
 			area_process();
-			area_get_alarm(pbuf,&len);
+			area_alarm=area_get_alarm(pbuf,&len);
+			if(area_alarm)
+				{
+				rt_free(pbuf);
+				}
 		}
 	}
 
