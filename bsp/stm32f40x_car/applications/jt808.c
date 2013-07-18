@@ -30,6 +30,7 @@
 #include "jt808_gps.h"
 #include "jt808_camera.h"
 #include "vdr.h"
+#include "jt808_updata.h"
 #include "jt808_area.h"
 
 #pragma diag_error 223
@@ -1635,7 +1636,7 @@ static void jt808_socket_proc( void )
 	state = gsmstate( GSM_STATE_GET );
 	if( state == GSM_IDLE )
 	{
-		//gsmstate( GSM_POWERON );                /*开机登网*/
+		gsmstate( GSM_POWERON );                /*开机登网*/
 		return;
 	}
 /*控制登网*/
@@ -2098,6 +2099,8 @@ rt_err_t gprs_rx( uint8_t linkno, uint8_t * pinfo, uint16_t length )
 {
 	uint8_t * pmsg;
 	pmsg = rt_malloc( length + 3 );                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+
+
 
 
 

@@ -457,7 +457,7 @@ uint16_t data_to_buf( uint8_t * pdest, uint32_t data, uint8_t width )
 
 
 /*********************************************************************************
-*函数名称:uint16_t buf_to_data( uint8_t * psrc, uint8_t width )
+*函数名称:uint32_t buf_to_data( uint8_t * psrc, uint8_t width )
 *功能描述:将不同类型的数据从buf中取出来，数据在buf中为大端模式
 *输	入:	psrc: 	存放数据的buffer
 		width:	存放的原始数据占用的buf字节数

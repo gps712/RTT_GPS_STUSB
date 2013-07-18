@@ -32,6 +32,7 @@ typedef __packed struct
 	u8		Pack_Mark[16];			///包标记
 }TypePicMultTransPara;
 
+uint32_t buf_to_data( uint8_t * psrc, uint8_t width );
 
 /*********************************************************************************
 *函数名称:u16 Cam_add_tx_pic_getdata( JT808_TX_NODEDATA * nodedata )

@@ -833,10 +833,6 @@ void gps_rx( uint8_t * pinfo, uint16_t length )
 			process_gps( );             /*处理GPS信息*/
 			area_process();
 			area_alarm=area_get_alarm(pbuf,&len);
-			if(area_alarm)
-				{
-				rt_free(pbuf);
-				}
 		}
 	}
 
