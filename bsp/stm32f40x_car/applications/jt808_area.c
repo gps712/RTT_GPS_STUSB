@@ -140,9 +140,10 @@ static u16 test_speed;
 //*********************************************************************************
 //声明外部函数
 //*********************************************************************************
-u32 Times_To_LongInt(T_TIMES *T);
+extern u32 Times_To_LongInt(T_TIMES *T);
 extern uint32_t buf_to_data( uint8_t * psrc, uint8_t width );
-
+extern uint16_t data_to_buf( uint8_t * pdest, uint32_t data, uint8_t width );
+extern void printer_data_hex(u8 *pSrc,u16 nSrcLength);
 
 
 /*********************************************************************************
@@ -330,10 +331,9 @@ FINSH_FUNCTION_EXPORT( dis_Point2Point, dis_Point2Point);
 u32 dis_Point2Line(s32 Cur_Lati, s32 Cur_Longi,s32 Lati_1,s32 Longi_1,s32 Lati_2,s32 Longi_2)
 {
  double	x,y,x1,y1,x2,y2;
- s32	temp_curlati,temp_curlongi,temp_lati,temp_longi;
+ s32	temp_lati,temp_longi;
  double a,a1,b;
  u32	tempu32data;
- double	tempd1,tempd2;
  //u8 tempbuf[128];
  
 
@@ -783,10 +783,8 @@ u16 area_flash_write_area( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
 u16 area_flash_write_line( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
 {
  u8 i;
- u8 *ptempbuf = pdatabuf;
  u32 TempAddress;
  TypeDF_AreaHead TempAreaHead;
- u16 ret = 0;
 
  if((pData->State==0)||(pData->State != AREA_Line))
  	{
@@ -812,10 +810,8 @@ u16 area_flash_write_line( u8 *pdatabuf,u16 maxlen,TypeDF_AreaHead *pData)
  
  area_flash_read_line(line_buffer,LINE_BUF_SIZE);
  
- ret = 1;
- FUNC_RET:
  rt_sem_release(&sem_dataflash);
- return ret;
+ return 1;
 }
 
 
@@ -846,7 +842,7 @@ void area_flash_del_area( u32 del_id, ENUM_AREA	del_State)
 		{
 		if(((TempAreaHead.ID == del_id)||(0 == del_id))&&(del_State == TempAreaHead.State))
 			{
-			TempAreaHead.State = 0;
+			TempAreaHead.State = AREA_None;
 			sst25_write_through(TempAddress,(u8 *)&TempAreaHead,sizeof(TypeDF_AreaHead));
 			}
 		TempAddress+=(TempAreaHead.Len+DF_AreaSaveSect-1)/DF_AreaSaveSect*DF_AreaSaveSect;
@@ -885,7 +881,7 @@ void area_flash_del_line( u32 del_id )
 		{
 		if((TempAreaHead.ID == del_id)||(0 == del_id))
 			{
-			TempAreaHead.State = 0;
+			TempAreaHead.State = AREA_None;
 			sst25_write_through(TempAddress,(u8 *)&TempAreaHead,sizeof(TypeDF_AreaHead));
 			}
 		}
@@ -942,11 +938,11 @@ rt_err_t area_jt808_del(uint8_t linkno,uint8_t *pmsg, ENUM_AREA  del_State)
  u32 tempu32data;
  u16 cmd_id;
  u8 *msg;
- u16 msg_len;
+ //u16 msg_len;
  u16 fram_num;
 
  cmd_id		= buf_to_data( pmsg , 2 );
- msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
+ //msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
  fram_num	= buf_to_data( pmsg + 10, 2 );
  pmsg 		+= 12;
  msg		= pmsg;
@@ -1009,10 +1005,10 @@ rt_err_t area_jt808_0x8600(uint8_t linkno,uint8_t *pmsg)
  double temp_d;
  
  u8 *msg;
- u16 msg_len;
+ //u16 msg_len;
  u16 fram_num;
  
- msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
+ //msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
  fram_num	= buf_to_data( pmsg + 10, 2 );
  pmsg 		+= 12;
  msg	= pmsg;
@@ -1099,16 +1095,14 @@ rt_err_t area_jt808_0x8602(uint8_t linkno,uint8_t *pmsg)
  u16 i;
  u16 datalen;
  u16 tempu16data;
- u32 tempu32data;
- u32 Longi,Lati;		///经度和纬度
  TypeDF_AreaHead *pTempHead;
  u8 tempbuf[64];
  
  u8 *msg;
- u16 msg_len;
+// u16 msg_len;
  u16 fram_num;
  
- msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
+ //msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
  fram_num	= buf_to_data( pmsg + 10, 2 );
  pmsg 		+= 12;
  msg	= pmsg;
@@ -1188,16 +1182,14 @@ rt_err_t area_jt808_0x8604(uint8_t linkno,uint8_t *pmsg)
  u16 i;
  u16 datalen;
  u16 tempu16data;
- u32 tempu32data;
  u32 Longi,Lati;		///经度和纬度
  TypeDF_AreaHead *pTempHead = NULL;
- u8 tempbuf[64];
  
  u8 *msg;
- u16 msg_len;
+// u16 msg_len;
  u16 fram_num;
  
- msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
+ //msg_len	= buf_to_data( pmsg + 2, 2 ) & 0x3FF;
  fram_num	= buf_to_data( pmsg + 10, 2 );
  pmsg 		+= 12;
  msg	= pmsg;
@@ -1308,10 +1300,8 @@ rt_err_t area_jt808_0x8606(uint8_t linkno,uint8_t *pmsg)
  u16 i;
  u16 datalen;
  u16 tempu16data;
- u32 tempu32data;
  u32 Longi,Lati;		///经度和纬度
  TypeDF_AreaHead *pTempHead = NULL;
- u8 tempbuf[64];
  
  u8 *msg;
  u16 msg_len;
@@ -1326,7 +1316,7 @@ rt_err_t area_jt808_0x8606(uint8_t linkno,uint8_t *pmsg)
  	tempu16data	= buf_to_data( pmsg + 14, 2 );
 	if( tempu16data )
 		{
-		updata_commit_ack_err(fram_num);
+		area_jt808_commit_ack(fram_num,0x8606,3);
  		return RT_ERROR;
 		}
  	pmsg 		+= 16;
@@ -1743,9 +1733,6 @@ u8 area_process_rectangle(TypeStruct_Coor *pCoo, Type_AreaInfo *AreaInfo )
 {
  u16 datalen;
  u16 attri;					///区域属性
- u32 lati,longi;			///区域中心点坐标
- u32 r;						///半径
- u32 d;						///距离
  u32 curspeed;				///当前速度
  u32 speed=0xFFFFFFFF;		///最高速度
  u32 speedtime=0xFFFFFFFF;	///超速时间
@@ -1772,7 +1759,7 @@ u8 area_process_rectangle(TypeStruct_Coor *pCoo, Type_AreaInfo *AreaInfo )
 	datalen += 3;
  	}
  
- AREA_IN:				///进区域
+ //AREA_IN:				///进区域
  //curspeed	= gps_speed;
  curspeed	= test_speed;
  if( AreaInfo->in_area == 0)
@@ -1839,9 +1826,10 @@ u8 area_process_polygon(TypeStruct_Coor *pCoo, Type_AreaInfo *AreaInfo )
  u32 curspeed;				///当前速度
  u32 speed=0xFFFFFFFF;		///最高速度
  u32 speedtime=0xFFFFFFFF;	///超速时间
- u16 angle_first,angle_last,angle_start,angle_end,angle_total;	///第一次的角度，最后一次的角度，开始角度，接收角度，总角度
+ u16 angle_first=0,angle_last=0,angle_start=0,angle_end=0;///第一次的角度，最后一次的角度，开始角度，接收角度，
+ //u16 angle_total=0;	///总角度
  u16 angle_1,angle_2,angle;				///计算当前点和多边形多点之间的角度
- u16 area_state;			///该值为0x03表示在区域里面
+ u16 area_state = 0;			///该值为0x03表示在区域里面
  if( Check_CooisInRect( pCoo, AreaInfo->area_data) == 0)
 	{
  	goto AREA_OUT;
@@ -1883,7 +1871,6 @@ u8 area_process_polygon(TypeStruct_Coor *pCoo, Type_AreaInfo *AreaInfo )
 		}
 	if(i == 0)					///如果是第一个点，则将该点的值设置为当前值
 		{
-		angle_total	= 0;
 		angle_start	= angle;
 		angle_end	= angle;
 		angle_first	= angle;
@@ -2008,11 +1995,11 @@ u8 area_process_line(TypeStruct_Coor *pCoo, Type_LineInfo *AreaInfo )
  u32 road_dis_min_id=0;			///计算的所有路段中，当前点距离最近的路段ID
 //u32 road_dis_min_width=0;		///计算的所有路段中，当前点距离最近的路段的宽度
  u32 lati,longi;				///坐标
- u32 lati_last,longi_last;		///上次处理的拐点坐标
+ u32 lati_last=0,longi_last=0;		///上次处理的拐点坐标
  u32 curspeed;					///当前速度
  u32 speed=0xFFFFFFFF;			///最高速度
  u32 speedtime=0xFFFFFFFF;		///超速时间
- u16 area_state;				///该值为0x03表示在区域里面
+	
  if( Check_CooisInRect( pCoo, &AreaInfo->line_head) == 0)
 	{
  	goto AREA_OUT;
@@ -2211,6 +2198,7 @@ void area_init(void)
  rt_sem_release(&sem_dataflash);
 }
 
+
 void area_read(void)
 {
  u16 i;
@@ -2258,7 +2246,7 @@ void area_process(void)
  TypeStruct_Coor cur_Coo;
  static u16 cur_line = 0;
  //static u16 cur_area = 0;
- return;
+	
  ///获取当前位置
  cur_Coo.Lati = gps_baseinfo.latitude;
  cur_Coo.Longi= gps_baseinfo.longitude;
@@ -2386,7 +2374,7 @@ u32 area_get_alarm(u8 *pdestbuf,u16* destbuflen)
  	if( RT_EOK == rt_mq_recv(&mq_area,(void *)&area_alarm,sizeof(Type_AREA_ALARM),RT_WAITING_NO) )
  		{
  		retdata |= BIT(area_alarm.alarm_bit);
-		memcpy(destbuflen+datalen,&area_alarm.attri_id,area_alarm.len+2);
+		memcpy(pdestbuf+datalen,&area_alarm.attri_id,area_alarm.len+2);
 		datalen += area_alarm.len + 2;
  		}
 	else
@@ -2405,13 +2393,13 @@ u32 area_get_alarm(u8 *pdestbuf,u16* destbuflen)
  		{
  		retdata	|= BIT(13);
 		///附加信息 ID  1BYTE
-		destbuflen[datalen++]	= 0x11;
+		pdestbuf[datalen++]	= 0x11;
 		///附加信息长度  1BYTE 
-		destbuflen[datalen++]	= 5;
+		pdestbuf[datalen++]	= 5;
 		////位置类型  1BYTE 
-		destbuflen[datalen++]	=  Area_Para.area_info[i].area_data->State;
+		pdestbuf[datalen++]	=  Area_Para.area_info[i].area_data->State;
 		///区域或路段ID  DWORD
-		data_to_buf(destbuflen+datalen, Area_Para.area_info[i].area_data->ID, 4);
+		data_to_buf(pdestbuf+datalen, Area_Para.area_info[i].area_data->ID, 4);
 		datalen	+= 4;
  		alarem_num++;
  		}
@@ -2427,13 +2415,13 @@ u32 area_get_alarm(u8 *pdestbuf,u16* destbuflen)
  		{
  		retdata	|= BIT(13);
 		///附加信息 ID  1BYTE
-		destbuflen[datalen++]	= 0x11;
+		pdestbuf[datalen++]	= 0x11;
 		///附加信息长度  1BYTE 
-		destbuflen[datalen++]	= 5;
+		pdestbuf[datalen++]	= 5;
 		////位置类型  1BYTE 
-		destbuflen[datalen++]	=  AREA_Line;
+		pdestbuf[datalen++]	=  AREA_Line;
 		///区域或路段ID  DWORD
-		data_to_buf(destbuflen+datalen, Area_Para.line_info[i].road_id, 4);
+		data_to_buf(pdestbuf+datalen, Area_Para.line_info[i].road_id, 4);
 		datalen	+= 4;
  		alarem_num++;
  		}
@@ -2444,6 +2432,7 @@ u32 area_get_alarm(u8 *pdestbuf,u16* destbuflen)
  	}
  
  FUNC_RET:
+ 	*destbuflen = datalen;
 	return retdata;
 }
 /************************************** The End Of File **************************************/

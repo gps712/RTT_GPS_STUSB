@@ -1,6 +1,17 @@
-/*
-     SMS.C
- */
+/************************************************************
+ * Copyright (C), 2008-2012,
+ * FileName:		// 	jt808_sms.c
+ * Author:			// 	baiyangmin
+ * Date:			// 	2013-07-08
+ * Description:		// 	短信处理及发送，接收，修改参数等功能
+ * Version:			// 	V0.01
+ * Function List:	// 	主要函数及其功能
+ *     1. -------		
+ * History:			// 	历史修改记录
+ *     <author>  <time>   <version >   <desc>
+ *     David    96/10/12     1.0     build this moudle
+ ***********************************************************/
+
 #include <rtthread.h>
 #include <rthw.h>
 #include "stm32f4xx.h"
@@ -94,7 +105,6 @@ static void SMS_protocol( u8 *instr, u16 len, u8 ACKstate );
 static int StringFind( const char* string, const char* find, int number )
 {
 	char* pos;
-	char* p;
 	int count = 0;
 	//pos=string;
 	//p = string;
@@ -105,7 +115,7 @@ static int StringFind( const char* string, const char* find, int number )
 	}
 	count = pos - string;
 	return count;
-#ifdef 0
+#if 0
 	while( number > 0 )
 	{
 		/*定义查找到的字符位置的指针，以便临时指针进行遍历*/
@@ -214,6 +224,7 @@ u16 Ascii_To_Hex( const u8* pSrc, u8* pDst, u16 nSrcLength )
 	// 返回目标数据长度
 	return ( nSrcLength >> 1 );
 }
+
 /***********************************************************
 * Function:
 * Description:
@@ -370,7 +381,7 @@ u16 GsmDecodeUcs2( const u8* pSrc, u8* pDst, u16 nSrcLength )
 		if( *pSrc ) ///汉字编码
 		{
 			p = pSrc;
-			Hex_To_Ascii( p, strTemp, 2 );
+			Hex_To_Ascii( p, (u8 *)strTemp, 2 );
 			strTemp[4]	= 0;
 			indexNum	= StringFind( UCS2_CODE, strTemp, strlen( UCS2_CODE ) );
 			if( indexNum >= 0 )
@@ -436,7 +447,7 @@ u16 GsmEncodeUcs2( const u8* pSrc, u8* pDst, u16 nSrcLength )
 			if( indexNum >= 0 )
 			{
 				indexNum = indexNum * 2;
-				Ascii_To_Hex( &UCS2_CODE[indexNum], strTemp, 4 );
+				Ascii_To_Hex( (const u8 *)&UCS2_CODE[indexNum], (u8 *)strTemp, 4 );
 				*pDst++ = strTemp[0];
 				*pDst++ = strTemp[1];
 			}else   ///不可识别的汉子用"※"表示
@@ -661,7 +672,7 @@ u8 Que_Number_Length( const u8 *Src )
 *********************************************************************************/
 u16 SetPhoneNumToPDU( u8 *pDest, char *pSrc, u16 len )
 {
-	u16 i, j;
+	u16 i;
 
 	memset( pDest, 0xff, len );
 	for( i = 0; i < len; i++ )
@@ -1585,7 +1596,8 @@ u8 SMS_rx_pro( char *psrc, u16 len )
 			SMS_Service.tx_state = SMS_TX_OK;
 		}
 		return 1;
-	}else if( strncmp( (char*)psrc, "+CMS ERROR:", 11 ) == 0 )
+	}
+	else if( strncmp( (char*)psrc, "+CMS ERROR:", 11 ) == 0 )
 	{
 		if( SMS_Service.tx_state == SMS_TX_WAITACK )
 		{
@@ -1818,7 +1830,7 @@ void SMS_Process( void )
 				rt_kprintf( "%s", SMS_Service.SMSAtSend );
 				at( ( char* )SMS_Service.SMSAtSend );
 				SMS_Service.rx_retry++;
-				SMS_Service.tx_state	= SMS_RX_WAITACK;               ///判断是否成功读取
+				SMS_Service.rx_state	= SMS_RX_WAITACK;               ///判断是否成功读取
 				rx_tick					= rt_tick_get( );
 			}
 			break;
@@ -1909,7 +1921,7 @@ u8 Add_SMS_Ack_Content( char * instr, u8 ACKflag )
 		return false;
 	}
 
-	if( strlen( instr ) + strlen( SMS_Service.SMS_sd_Content ) < sizeof( SMS_Service.SMS_sd_Content ) )
+	if( strlen( (const char *)instr ) + strlen( (const char *)SMS_Service.SMS_sd_Content ) < sizeof( (const char *)SMS_Service.SMS_sd_Content ) )
 	{
 		strcat( (char*)SMS_Service.SMS_sd_Content, instr );
 		SMS_Service.SMS_sendFlag = 1;
@@ -1933,7 +1945,7 @@ u8 Add_SMS_Ack_Content( char * instr, u8 ACKflag )
 *********************************************************************************/
 void SMS_protocol( u8 *instr, u16 len, u8 ACKstate )
 {
-	SMS_Tx_PDU( SMS_Service.SMS_destNum, instr );
+	SMS_Tx_PDU( (char *)SMS_Service.SMS_destNum, (char *)instr );
 }
 
 #if 0
@@ -2117,7 +2129,7 @@ void   SMS_protocol( u8 *instr, u16 len, u8 ACKstate )  //  ACKstate
 
 					/*
 					   DF_WriteFlashSector(DF_SIMID_offset,0,SIM_CardID_JT808,13);
-					   ///*/
+					  */
 					Add_SMS_Ack_Content( sms_ack_data, ACKstate );
 
 					//------- add on 2013-6-6
